@@ -1,15 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-ربات بهای تمام شده‌ی یک جفت کفش دست‌دوز — برای پیام‌رسان بله
-ساختار آیتم‌ها دقیقاً مطابق فایل «قیمت تمام شده ربات 2.xlsx»
 
-نصب کتابخانه:
-    pip install python-bale-bot
-
-اجرا:
-    1) توکن ربات را از @BotFather در بله بگیرید و در BOT_TOKEN قرار دهید.
-    2) python shoe_cost_bot.py
-"""
 
 from bale import Bot, Update, Message
 from bale.handlers import CommandHandler, MessageHandler
