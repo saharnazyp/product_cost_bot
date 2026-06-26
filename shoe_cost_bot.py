@@ -42,11 +42,11 @@ SAYER = [
 # ساخت لیست تخت سوالات
 QUESTIONS = []
 for label, choices in MOAD_AVALIYE:
-    QUESTIONS.append({"section": "mavad", "label": label, "choices": choices, "multi": False})
+    QUESTIONS.append({"section": "mavad", "label": label, "choices": choices})
 for label in DASTMOZD:
-    QUESTIONS.append({"section": "dastmozd", "label": label, "choices": [], "multi": False})
+    QUESTIONS.append({"section": "dastmozd", "label": label, "choices": []})
 for label in SAYER:
-    QUESTIONS.append({"section": "sayer", "label": label, "choices": [], "multi": False})
+    QUESTIONS.append({"section": "sayer", "label": label, "choices": []})
 
 N_MAVAD = len(MOAD_AVALIYE)
 N_DASTMOZD = len(DASTMOZD)
@@ -58,14 +58,17 @@ HEADERS = {
     "sayer": "🏭 سایر هزینه‌ها (سهم هر جفت)",
 }
 
-# متن راهنمای ورود مبلغ بر اساس بخش
 PROMPT = {
     "mavad": "مبلغ هر جفت را به تومان وارد کنید:",
     "dastmozd": "جفتی چند؟ (کارمزد هر جفت به تومان):",
     "sayer": "سهم هر جفت را به تومان وارد کنید:",
 }
 
-sessions = {}  # chat_id -> {step, answers, types, profit, stage, await_type}
+BACK_BTN = "⬅️ قبلی"
+EDIT_BTN = "✏️ ویرایش یک آیتم"
+CONFIRM_BTN = "✅ تأیید و ادامه"
+
+sessions = {}  # chat_id -> state
 
 
 def fa_num(text):
@@ -86,58 +89,86 @@ def section_prefix(step):
     return ""
 
 
-DONE_BTN = "✔️ تمام شد"
-
-
-def make_keyboard(choices):
-    """کیبورد تک‌انتخابی ساده."""
+def make_keyboard(choices, with_back=False):
+    """کیبورد انتخاب نوع. اگر with_back باشد دکمه قبلی هم اضافه می‌شود."""
     kb = MenuKeyboardMarkup()
     row = 1
     for i, c in enumerate(choices):
         kb.add(MenuKeyboardButton(c), row)
         if i % 2 == 1:
             row += 1
+    if with_back:
+        kb.add(MenuKeyboardButton(BACK_BTN), row + 1)
     return kb
 
 
-def make_multi_keyboard(choices, selected):
+def back_keyboard():
+    """فقط دکمه قبلی، برای مرحله‌ی ورود مبلغ."""
     kb = MenuKeyboardMarkup()
-    row = 1
-    for i, c in enumerate(choices):
-        label = f"✅ {c}" if c in selected else c
-        kb.add(MenuKeyboardButton(label), row)
-        if i % 2 == 1:
-            row += 1
-    kb.add(MenuKeyboardButton(DONE_BTN), row + 1)
+    kb.add(MenuKeyboardButton(BACK_BTN), 1)
     return kb
 
 
 async def ask_question(message: Message, s):
+    """پرسیدن سوال مرحله فعلی."""
     step = s["step"]
     q = QUESTIONS[step]
     prefix = section_prefix(step)
     num = f"({step + 1}/{TOTAL_Q})"
+    can_back = step > 0  # در سوال اول دکمه قبلی نداریم
 
-    if q["choices"] and q.get("multi"):
-        # حالت چندانتخابی (چسب)
+    if q["choices"]:
         s["await_type"] = True
-        s["multi_selected"] = []
-        kb = make_multi_keyboard(q["choices"], [])
-        await message.reply(
-            f"{prefix}{num} {q['label']}\n"
-            "هر نوعی که استفاده می‌کنید را بزنید (می‌توانید چند مورد انتخاب کنید).\n"
-            "در پایان «✔️ تمام شد» را بزنید:",
-            components=kb,
-        )
-    elif q["choices"]:
-        # حالت تک‌انتخابی
-        s["await_type"] = True
-        kb = make_keyboard(q["choices"])
+        kb = make_keyboard(q["choices"], with_back=can_back)
         await message.reply(f"{prefix}{num} {q['label']}\nنوع را انتخاب کنید:", components=kb)
     else:
         s["await_type"] = False
         prompt = PROMPT[q["section"]]
-        await message.reply(f"{prefix}{num} {q['label']}\n{prompt}")
+        kb = back_keyboard() if can_back else None
+        await message.reply(f"{prefix}{num} {q['label']}\n{prompt}", components=kb)
+
+
+def go_back(s):
+    """یک قدم به عقب: آخرین جواب و نوع را پاک می‌کند."""
+    if s["step"] <= 0:
+        return False
+    s["step"] -= 1
+    if s["answers"]:
+        s["answers"].pop()
+    if s["types"]:
+        s["types"].pop()
+    s["await_type"] = False
+    return True
+
+
+def compute(s):
+    ans = s["answers"]
+    total_mavad = sum(ans[:N_MAVAD])
+    total_dastmozd = sum(ans[N_MAVAD:N_MAVAD + N_DASTMOZD])
+    total_sayer = sum(ans[N_MAVAD + N_DASTMOZD:])
+    hoghoogh_va_sayer = total_dastmozd + total_sayer
+    tamam_shode = total_mavad + hoghoogh_va_sayer
+    return total_mavad, total_dastmozd, total_sayer, hoghoogh_va_sayer, tamam_shode
+
+
+def build_summary(s):
+    """خلاصه‌ی شماره‌دار همه‌ی آیتم‌ها برای بازبینی/ویرایش."""
+    lines = ["📋 خلاصه‌ی اطلاعات واردشده:\n"]
+    for i, q in enumerate(QUESTIONS):
+        val = s["answers"][i] if i < len(s["answers"]) else 0
+        t = s["types"][i] if i < len(s["types"]) else "-"
+        type_part = f" [{t}]" if t and t != "-" else ""
+        lines.append(f"{i + 1}. {q['label']}{type_part}: {fmt(val)} تومان")
+    lines.append("\nبرای ویرایش، «✏️ ویرایش یک آیتم» را بزنید.")
+    lines.append("اگر همه‌چیز درست است، «✅ تأیید و ادامه» را بزنید.")
+    return "\n".join(lines)
+
+
+def review_keyboard():
+    kb = MenuKeyboardMarkup()
+    kb.add(MenuKeyboardButton(EDIT_BTN), 1)
+    kb.add(MenuKeyboardButton(CONFIRM_BTN), 2)
+    return kb
 
 
 @bot.event
@@ -153,10 +184,12 @@ async def on_message(message: Message):
     text = text.strip()
     chat_id = message.chat.id
 
+    # ── شروع / ریست ──
     if text in ("/start", "start", "شروع"):
         sessions[chat_id] = {
             "step": 0, "answers": [], "types": [],
             "profit": None, "stage": "items", "await_type": False,
+            "edit_target": None,
         }
         await message.reply(
             "👞✨ ربات هوشمند محاسبه بهای تمام‌شده\n"
@@ -175,13 +208,11 @@ async def on_message(message: Message):
             "🧵 مواد اولیه ← هزینه مواد مصرفی برای یک جفت\n"
             "👨🏻‍🔧 دستمزد ← کارمزد پرداختی برای تولید یک جفت\n"
             "🏭 سایر هزینه‌ها ← سهم هر جفت از اجاره، برق، استهلاک، حمل‌ونقل و…\n\n"
-            "▫️ ابتدا نوع آیتم را از دکمه‌ها انتخاب کنید، سپس مبلغ را وارد نمایید.\n"
+            "▫️ آیتم‌های دارای نوع، اول با دکمه انتخاب می‌شوند، سپس مبلغ.\n"
             "▫️ اگر هزینه‌ای ندارید، عدد ۰ را ارسال کنید.\n"
+            "▫️ هر زمان می‌توانید با «⬅️ قبلی» یک قدم به عقب برگردید.\n"
             "━━━━━━━━━━━━━━━━━\n"
-            "📊 در پایان، ربات این موارد را نمایش می‌دهد:\n"
-            "   ✅ مجموع بهای تمام‌شده\n"
-            "   ✅ قیمت فروش پیشنهادی\n"
-            "   ✅ سود و حاشیه سود\n"
+            "📊 در پایان، خلاصه را می‌بینید و می‌توانید هر آیتم را ویرایش کنید.\n"
             "━━━━━━━━━━━━━━━━━\n"
             "🚀 برای شروع، بزن بریم!"
         )
@@ -194,77 +225,120 @@ async def on_message(message: Message):
 
     s = sessions[chat_id]
 
+    # ── دکمه قبلی (در مرحله آیتم‌ها) ──
+    if s["stage"] == "items" and (text == BACK_BTN or text.replace("⬅️", "").strip() == "قبلی"):
+        if go_back(s):
+            await message.reply("⬅️ به سوال قبل برگشتیم:")
+            await ask_question(message, s)
+        else:
+            await message.reply("این اولین سوال است؛ امکان برگشت نیست.")
+            await ask_question(message, s)
+        return
+
     # ── مرحله انتخاب نوع (دکمه) ──
     if s["stage"] == "items" and s.get("await_type"):
         q = QUESTIONS[s["step"]]
-
-        # حالت چندانتخابی (چسب)
-        if q.get("multi"):
-            # کاربر «تمام شد» را زد
-            if text == DONE_BTN or text.replace("✔️", "").strip() == "تمام شد":
-                sel = s.get("multi_selected", [])
-                if not sel:
-                    await message.reply("حداقل یک نوع انتخاب کنید یا اگر چسب ندارید یک نوع بزنید و مبلغ ۰ وارد کنید.")
-                    return
-                s["types"].append("، ".join(sel))
-                s["await_type"] = False
-                await message.reply(
-                    f"✅ نوع‌های انتخاب‌شده: {'، '.join(sel)}\n"
-                    "حالا مبلغ کل چسب برای یک جفت را به تومان وارد کنید:"
-                )
-                return
-            # متن ممکن است با ✅ شروع شده باشد؛ پاکش کن
-            clean = text.replace("✅", "").strip()
-            if clean in q["choices"]:
-                sel = s.setdefault("multi_selected", [])
-                if clean in sel:
-                    sel.remove(clean)  # برداشتن انتخاب با زدن دوباره
-                else:
-                    sel.append(clean)
-                kb = make_multi_keyboard(q["choices"], sel)
-                chosen_txt = "، ".join(sel) if sel else "—"
-                await message.reply(
-                    f"انتخاب فعلی: {chosen_txt}\n"
-                    "می‌توانید مورد دیگری بزنید یا «✔️ تمام شد» را بزنید:",
-                    components=kb,
-                )
-            else:
-                await message.reply("لطفاً از دکمه‌ها انتخاب کنید.")
-            return
-
-        # حالت تک‌انتخابی
         if text in q["choices"]:
-            s["types"].append(text)
+            # اگر در حال ویرایش این آیتم بودیم، نوع را جایگزین کن
+            if s["step"] < len(s["types"]):
+                s["types"][s["step"]] = text
+            else:
+                s["types"].append(text)
             s["await_type"] = False
-            await message.reply(f"✅ نوع: {text}\nحالا مبلغ هر جفت این آیتم را به تومان وارد کنید:")
+            await message.reply(
+                f"✅ نوع: {text}\nحالا مبلغ هر جفت این آیتم را به تومان وارد کنید:",
+                components=back_keyboard(),
+            )
         else:
             await message.reply("لطفاً یکی از دکمه‌های نوع را انتخاب کنید.")
         return
 
-    # ── خواندن عدد ──
+    # ── مرحله بازبینی پایانی ──
+    if s["stage"] == "review":
+        if text == EDIT_BTN or "ویرایش" in text:
+            s["stage"] = "edit_pick"
+            await message.reply(
+                "شماره‌ی آیتمی که می‌خواهید ویرایش کنید را بفرستید (مثلاً 14):"
+            )
+            return
+        if text == CONFIRM_BTN or "تأیید" in text or "تایید" in text:
+            s["stage"] = "profit"
+            await message.reply(
+                "✅ عالی. حالا درصد سود کارگاه را وارد کنید (مثلاً برای ۲۰ درصد عدد 20):"
+            )
+            return
+        await message.reply("لطفاً «✏️ ویرایش یک آیتم» یا «✅ تأیید و ادامه» را بزنید.")
+        return
+
+    # ── انتخاب شماره آیتم برای ویرایش ──
+    if s["stage"] == "edit_pick":
+        try:
+            idx = int(fa_num(text))
+        except (ValueError, AttributeError):
+            await message.reply("لطفاً شماره‌ی آیتم را به عدد بفرستید (مثلاً 14):")
+            return
+        if not (1 <= idx <= TOTAL_Q):
+            await message.reply(f"شماره باید بین ۱ تا {TOTAL_Q} باشد. دوباره بفرستید:")
+            return
+        s["edit_target"] = idx - 1
+        s["step"] = idx - 1
+        s["stage"] = "items"
+        q = QUESTIONS[idx - 1]
+        await message.reply(f"در حال ویرایش آیتم {idx}: {q['label']}")
+        # اگر نوع دارد، اول نوع را بپرس، وگرنه مستقیم مبلغ
+        if q["choices"]:
+            s["await_type"] = True
+            kb = make_keyboard(q["choices"])
+            await message.reply("نوع را دوباره انتخاب کنید:", components=kb)
+        else:
+            s["await_type"] = False
+            await message.reply(f"{PROMPT[q['section']]}")
+        return
+
+    # ── خواندن عدد (مبلغ یا درصد سود) ──
     try:
         value = fa_num(text)
     except (ValueError, AttributeError):
         await message.reply("⚠️ لطفاً فقط عدد وارد کنید.")
         return
 
+    # ── ثبت مبلغ آیتم ──
     if s["stage"] == "items":
         q = QUESTIONS[s["step"]]
+        # نوع برای آیتم‌های بدون انتخاب
         if not q["choices"]:
-            s["types"].append("-")
-        s["answers"].append(value)
-        s["step"] += 1
+            if s["step"] < len(s["types"]):
+                pass  # در ویرایش، نوع تغییری نمی‌کند
+            else:
+                s["types"].append("-")
 
+        # ثبت یا جایگزینی مبلغ
+        if s["step"] < len(s["answers"]):
+            s["answers"][s["step"]] = value      # ویرایش
+            editing = (s.get("edit_target") is not None)
+        else:
+            s["answers"].append(value)            # ثبت عادی
+            editing = False
+
+        # اگر در حال ویرایش بودیم، برگرد به خلاصه
+        if editing:
+            s["edit_target"] = None
+            s["stage"] = "review"
+            await message.reply("✅ اصلاح شد.")
+            await message.reply(build_summary(s), components=review_keyboard())
+            return
+
+        # حالت عادی: برو سوال بعد
+        s["step"] += 1
         if s["step"] < TOTAL_Q:
             await ask_question(message, s)
         else:
-            s["stage"] = "profit"
-            await message.reply(
-                "✅ همه‌ی هزینه‌ها وارد شد.\n\n"
-                "حالا درصد سود کارگاه را وارد کنید (مثلاً برای ۲۰ درصد عدد 20):"
-            )
+            # پایان آیتم‌ها → نمایش خلاصه برای بازبینی
+            s["stage"] = "review"
+            await message.reply(build_summary(s), components=review_keyboard())
         return
 
+    # ── درصد سود و نتیجه ──
     if s["stage"] == "profit":
         s["profit"] = value
         await send_result(message, s)
@@ -273,13 +347,7 @@ async def on_message(message: Message):
 
 
 async def send_result(message: Message, s):
-    ans = s["answers"]
-    total_mavad = sum(ans[:N_MAVAD])
-    total_dastmozd = sum(ans[N_MAVAD:N_MAVAD + N_DASTMOZD])
-    total_sayer = sum(ans[N_MAVAD + N_DASTMOZD:])
-
-    hoghoogh_va_sayer = total_dastmozd + total_sayer
-    tamam_shode = total_mavad + hoghoogh_va_sayer
+    total_mavad, total_dastmozd, total_sayer, hoghoogh_va_sayer, tamam_shode = compute(s)
     profit_pct = s["profit"]
     sood = tamam_shode * profit_pct / 100
     forosh = tamam_shode + sood
