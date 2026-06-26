@@ -12,13 +12,13 @@ MOAD_AVALIYE = [
     ("زیره", ["ترمو", "لاستیک", "نیولایت", "میکرولایت", "پی‌یو", "چرم"]),
     ("کف ۲۵", ["تکسون", "اشتراول"]),
     ("قدک پشت و پنجه ۳۲", ["حرارتی", "تکنوژی", "بنزینی"]),
-    ("انواع چسب", ["فرنگی", "کرپ", "پی‌یو", "دوغی"]),
+    ("انواع چسب (فرنگی، کرپ، پی‌یو، دوغی)", []),
     ("ابر", ["معمولی", "مموری فوم"]),
     ("خرجکار (میخ، منگنه، پرایمر، واکس، نخ و سایر)", []),
     ("یراق آلات", ["سگک", "منگنه", "سایر"]),
     ("بند", ["ایرانی", "خارجی"]),
     ("زیپ", []),
-    ("گلچه", ["چسبی", "آماده"]),
+    ("کلوچه", ["چسبی", "آماده"]),
     ("مدل‌سازی و قالب و ماهیچه", []),
     ("هزینه بسته‌بندی", []),
     ("ملزومات (قالب، تیغ، تخته پرس و سایر)", []),
@@ -42,8 +42,7 @@ SAYER = [
 # ساخت لیست تخت سوالات
 QUESTIONS = []
 for label, choices in MOAD_AVALIYE:
-    multi = (label == "انواع چسب")  # فقط چسب چندانتخابی است
-    QUESTIONS.append({"section": "mavad", "label": label, "choices": choices, "multi": multi})
+    QUESTIONS.append({"section": "mavad", "label": label, "choices": choices, "multi": False})
 for label in DASTMOZD:
     QUESTIONS.append({"section": "dastmozd", "label": label, "choices": [], "multi": False})
 for label in SAYER:
@@ -87,7 +86,11 @@ def section_prefix(step):
     return ""
 
 
+DONE_BTN = "✔️ تمام شد"
+
+
 def make_keyboard(choices):
+    """کیبورد تک‌انتخابی ساده."""
     kb = MenuKeyboardMarkup()
     row = 1
     for i, c in enumerate(choices):
@@ -97,13 +100,37 @@ def make_keyboard(choices):
     return kb
 
 
+def make_multi_keyboard(choices, selected):
+    kb = MenuKeyboardMarkup()
+    row = 1
+    for i, c in enumerate(choices):
+        label = f"✅ {c}" if c in selected else c
+        kb.add(MenuKeyboardButton(label), row)
+        if i % 2 == 1:
+            row += 1
+    kb.add(MenuKeyboardButton(DONE_BTN), row + 1)
+    return kb
+
+
 async def ask_question(message: Message, s):
     step = s["step"]
     q = QUESTIONS[step]
     prefix = section_prefix(step)
     num = f"({step + 1}/{TOTAL_Q})"
 
-    if q["choices"]:
+    if q["choices"] and q.get("multi"):
+        # حالت چندانتخابی (چسب)
+        s["await_type"] = True
+        s["multi_selected"] = []
+        kb = make_multi_keyboard(q["choices"], [])
+        await message.reply(
+            f"{prefix}{num} {q['label']}\n"
+            "هر نوعی که استفاده می‌کنید را بزنید (می‌توانید چند مورد انتخاب کنید).\n"
+            "در پایان «✔️ تمام شد» را بزنید:",
+            components=kb,
+        )
+    elif q["choices"]:
+        # حالت تک‌انتخابی
         s["await_type"] = True
         kb = make_keyboard(q["choices"])
         await message.reply(f"{prefix}{num} {q['label']}\nنوع را انتخاب کنید:", components=kb)
@@ -170,6 +197,42 @@ async def on_message(message: Message):
     # ── مرحله انتخاب نوع (دکمه) ──
     if s["stage"] == "items" and s.get("await_type"):
         q = QUESTIONS[s["step"]]
+
+        # حالت چندانتخابی (چسب)
+        if q.get("multi"):
+            # کاربر «تمام شد» را زد
+            if text == DONE_BTN or text.replace("✔️", "").strip() == "تمام شد":
+                sel = s.get("multi_selected", [])
+                if not sel:
+                    await message.reply("حداقل یک نوع انتخاب کنید یا اگر چسب ندارید یک نوع بزنید و مبلغ ۰ وارد کنید.")
+                    return
+                s["types"].append("، ".join(sel))
+                s["await_type"] = False
+                await message.reply(
+                    f"✅ نوع‌های انتخاب‌شده: {'، '.join(sel)}\n"
+                    "حالا مبلغ کل چسب برای یک جفت را به تومان وارد کنید:"
+                )
+                return
+            # متن ممکن است با ✅ شروع شده باشد؛ پاکش کن
+            clean = text.replace("✅", "").strip()
+            if clean in q["choices"]:
+                sel = s.setdefault("multi_selected", [])
+                if clean in sel:
+                    sel.remove(clean)  # برداشتن انتخاب با زدن دوباره
+                else:
+                    sel.append(clean)
+                kb = make_multi_keyboard(q["choices"], sel)
+                chosen_txt = "، ".join(sel) if sel else "—"
+                await message.reply(
+                    f"انتخاب فعلی: {chosen_txt}\n"
+                    "می‌توانید مورد دیگری بزنید یا «✔️ تمام شد» را بزنید:",
+                    components=kb,
+                )
+            else:
+                await message.reply("لطفاً از دکمه‌ها انتخاب کنید.")
+            return
+
+        # حالت تک‌انتخابی
         if text in q["choices"]:
             s["types"].append(text)
             s["await_type"] = False
