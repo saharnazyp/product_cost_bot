@@ -18,7 +18,7 @@ MOAD_AVALIYE = [
     ("یراق آلات", ["سگک", "منگنه", "سایر"]),
     ("بند", ["ایرانی", "خارجی"]),
     ("زیپ", []),
-    ("کلوچه", ["چسبی", "آماده"]),
+    ("گلچه", ["چسبی", "آماده"]),
     ("مدل‌سازی و قالب و ماهیچه", []),
     ("هزینه بسته‌بندی", []),
     ("ملزومات (قالب، تیغ، تخته پرس و سایر)", []),
@@ -42,11 +42,12 @@ SAYER = [
 # ساخت لیست تخت سوالات
 QUESTIONS = []
 for label, choices in MOAD_AVALIYE:
-    QUESTIONS.append({"section": "mavad", "label": label, "choices": choices})
+    multi = (label == "انواع چسب")  # فقط چسب چندانتخابی است
+    QUESTIONS.append({"section": "mavad", "label": label, "choices": choices, "multi": multi})
 for label in DASTMOZD:
-    QUESTIONS.append({"section": "dastmozd", "label": label, "choices": []})
+    QUESTIONS.append({"section": "dastmozd", "label": label, "choices": [], "multi": False})
 for label in SAYER:
-    QUESTIONS.append({"section": "sayer", "label": label, "choices": []})
+    QUESTIONS.append({"section": "sayer", "label": label, "choices": [], "multi": False})
 
 N_MAVAD = len(MOAD_AVALIYE)
 N_DASTMOZD = len(DASTMOZD)
