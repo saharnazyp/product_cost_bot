@@ -5,10 +5,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = Bot(token=BOT_TOKEN)
 
 # ───────────────── تعریف آیتم‌ها ─────────────────
-# هر آیتم: (بخش، نام آیتم، لیست نوع‌ها برای دکمه)
-# اگر لیست نوع‌ها خالی باشد یعنی فقط مبلغ تایپ می‌شود.
-
-# بخش ۱: مواد اولیه (E3:E18)
+# بخش ۱: مواد اولیه — (نام، لیست نوع‌ها)
 MOAD_AVALIYE = [
     ("چرم رویه", ["فلوتر", "صافتی", "جیر", "نبوک", "اشوالت", "هورس", "پولیشی", "ناپا", "میلینگ"]),
     ("چرم آستری", ["گاوی", "بزی", "گوسفندی"]),
@@ -28,7 +25,7 @@ MOAD_AVALIYE = [
     ("ضایعات", []),
 ]
 
-# بخش ۲: دستمزد مستقیم (فقط مبلغ)
+# بخش ۲: دستمزد مستقیم (جفتی چند)
 DASTMOZD = [
     "آستر بر", "لویس کار", "رومیزکار", "چرخکار",
     "دورنعلکی", "لفاف کن", "پرداخت‌چی", "کار جمع‌کن",
@@ -36,13 +33,13 @@ DASTMOZD = [
     "حسابدار", "کنترل کیفی", "کارفرما",
 ]
 
-# بخش ۳: سایر هزینه‌ها (فقط مبلغ)
+# بخش ۳: سایر هزینه‌ها (سهم هر جفت)
 SAYER = [
     "اجاره", "تعمیرات و نگهداری ماشین‌آلات", "انرژی", "بیمه", "حمل و نقل و پیک",
     "خدمات پس از فروش", "آبدارخانه", "مالیات عملکرد",
 ]
 
-# ساخت لیست تخت سوالات: هر عنصر دیکشنری با کلیدهای section, label, choices
+# ساخت لیست تخت سوالات
 QUESTIONS = []
 for label, choices in MOAD_AVALIYE:
     QUESTIONS.append({"section": "mavad", "label": label, "choices": choices})
@@ -56,14 +53,19 @@ N_DASTMOZD = len(DASTMOZD)
 TOTAL_Q = len(QUESTIONS)
 
 HEADERS = {
-    "mavad": "🧵 مواد اولیه",
-    "dastmozd": "👷 دستمزد مستقیم",
-    "sayer": "🏭 سایر هزینه‌ها",
+    "mavad": "🧵 مواد اولیه (مبلغ هر جفت)",
+    "dastmozd": "👷 دستمزد مستقیم (جفتی چند)",
+    "sayer": "🏭 سایر هزینه‌ها (سهم هر جفت)",
 }
 
-# وضعیت هر کاربر
-# chat_id -> {step, answers:[], types:[], profit, stage, await_type:bool}
-sessions = {}
+# متن راهنمای ورود مبلغ بر اساس بخش
+PROMPT = {
+    "mavad": "مبلغ هر جفت را به تومان وارد کنید:",
+    "dastmozd": "جفتی چند؟ (کارمزد هر جفت به تومان):",
+    "sayer": "سهم هر جفت را به تومان وارد کنید:",
+}
+
+sessions = {}  # chat_id -> {step, answers, types, profit, stage, await_type}
 
 
 def fa_num(text):
@@ -85,7 +87,6 @@ def section_prefix(step):
 
 
 def make_keyboard(choices):
-    """ساخت کیبورد دکمه‌ای از روی لیست نوع‌ها، دو دکمه در هر ردیف."""
     kb = MenuKeyboardMarkup()
     row = 1
     for i, c in enumerate(choices):
@@ -96,24 +97,19 @@ def make_keyboard(choices):
 
 
 async def ask_question(message: Message, s):
-    """پرسیدن سوال فعلی؛ اگر نوع دارد اول دکمه‌ها را نشان می‌دهد."""
     step = s["step"]
     q = QUESTIONS[step]
     prefix = section_prefix(step)
     num = f"({step + 1}/{TOTAL_Q})"
 
     if q["choices"]:
-        # مرحله انتخاب نوع با دکمه
         s["await_type"] = True
         kb = make_keyboard(q["choices"])
-        await message.reply(
-            f"{prefix}{num} {q['label']}\nنوع را انتخاب کنید:",
-            components=kb,
-        )
+        await message.reply(f"{prefix}{num} {q['label']}\nنوع را انتخاب کنید:", components=kb)
     else:
-        # مستقیم مبلغ
         s["await_type"] = False
-        await message.reply(f"{prefix}{num} {q['label']} :\nمبلغ را به تومان وارد کنید:")
+        prompt = PROMPT[q["section"]]
+        await message.reply(f"{prefix}{num} {q['label']}\n{prompt}")
 
 
 @bot.event
@@ -129,22 +125,23 @@ async def on_message(message: Message):
     text = text.strip()
     chat_id = message.chat.id
 
-    # شروع / ریست
     if text in ("/start", "start", "شروع"):
         sessions[chat_id] = {
             "step": 0, "answers": [], "types": [],
             "profit": None, "stage": "items", "await_type": False,
         }
         await message.reply(
-            "👞 ربات محاسبه‌ی بهای تمام‌شده‌ی یک جفت کفش دست‌دوز\n\n"
-            "برای آیتم‌هایی که نوع دارند، اول نوع را با دکمه انتخاب می‌کنید،\n"
-            "سپس مبلغ آن را برای یک جفت کفش وارد می‌کنید.\n"
-            "اگر آیتمی ندارید عدد ۰ را بفرستید.\n"
-            "برای شروع مجدد هر زمان /start را بزنید.\n"
+            "👞 ربات محاسبه‌ی بهای تمام‌شده‌ی یک جفت کفش دست‌دوز\n"
+            "─────────────────\n"
+            "همه‌ی مبالغ برای «یک جفت» وارد می‌شوند:\n"
+            "• مواد اولیه: مبلغ هر جفت.\n"
+            "• دستمزد: جفتی چند (کارمزد هر جفت).\n"
+            "• سایر هزینه‌ها: سهم هر جفت.\n"
+            "آیتم‌های دارای نوع، اول با دکمه انتخاب می‌شوند.\n"
+            "اگر آیتمی ندارید عدد ۰ را بفرستید. برای شروع مجدد /start.\n"
             "─────────────────"
         )
-        s = sessions[chat_id]
-        await ask_question(message, s)
+        await ask_question(message, sessions[chat_id])
         return
 
     if chat_id not in sessions:
@@ -156,18 +153,15 @@ async def on_message(message: Message):
     # ── مرحله انتخاب نوع (دکمه) ──
     if s["stage"] == "items" and s.get("await_type"):
         q = QUESTIONS[s["step"]]
-        # متن دکمه باید جزو نوع‌ها باشد
         if text in q["choices"]:
             s["types"].append(text)
             s["await_type"] = False
-            await message.reply(
-                f"✅ نوع انتخاب‌شده: {text}\nحالا مبلغ این آیتم را به تومان وارد کنید:"
-            )
+            await message.reply(f"✅ نوع: {text}\nحالا مبلغ هر جفت این آیتم را به تومان وارد کنید:")
         else:
             await message.reply("لطفاً یکی از دکمه‌های نوع را انتخاب کنید.")
         return
 
-    # ── خواندن عدد (مبلغ یا درصد سود) ──
+    # ── خواندن عدد ──
     try:
         value = fa_num(text)
     except (ValueError, AttributeError):
@@ -176,7 +170,6 @@ async def on_message(message: Message):
 
     if s["stage"] == "items":
         q = QUESTIONS[s["step"]]
-        # اگر این آیتم نوع نداشت، یک placeholder در types بگذار
         if not q["choices"]:
             s["types"].append("-")
         s["answers"].append(value)
@@ -211,7 +204,6 @@ async def send_result(message: Message, s):
     sood = tamam_shode * profit_pct / 100
     forosh = tamam_shode + sood
 
-    # خلاصه نوع جنس‌های انتخاب‌شده برای مواد اولیه
     selected = []
     for i in range(N_MAVAD):
         t = s["types"][i] if i < len(s["types"]) else "-"
@@ -223,7 +215,7 @@ async def send_result(message: Message, s):
         "📊 نتیجه‌ی محاسبه — بهای تمام‌شده‌ی یک جفت کفش\n"
         "═════════════════\n"
         f"🧵 جمع مواد اولیه: {fmt(total_mavad)} تومان\n"
-        f"👷 جمع حقوق و دستمزد: {fmt(total_dastmozd)} تومان\n"
+        f"👷 جمع دستمزد: {fmt(total_dastmozd)} تومان\n"
         f"🏭 جمع سایر هزینه‌ها: {fmt(total_sayer)} تومان\n"
         f"➕ هزینه‌ی حقوق و سایر: {fmt(hoghoogh_va_sayer)} تومان\n"
         "─────────────────\n"
@@ -234,7 +226,6 @@ async def send_result(message: Message, s):
         f"📝 نوع جنس‌های انتخاب‌شده:\n{types_summary}\n\n"
         "برای محاسبه‌ی مجدد /start را بزنید."
     )
-    # حذف کیبورد دکمه‌ای در پیام نتیجه
     await message.reply(text)
 
 
