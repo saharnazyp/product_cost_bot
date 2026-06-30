@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>موتور بهای تمام‌شده زنده — تعاونی کفاشان دست‌دوز تهران</title>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<style>
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Black.woff2') format('woff2');
+  font-weight: 900; font-display: swap;
+}
+:root{
+  --bg:#05070d;
+  --bg2:#0a0e18;
+  --panel:rgba(18,24,38,0.72);
+  --panel-line:rgba(212,175,84,0.18);
+  --gold:#e8c45a;
+  --gold-bright:#ffd97a;
+  --gold-dim:#9a823f;
+  --blue:#3a6fd6;
+  --blue-dim:#21304f;
+  --txt:#eef2f9;
+  --txt-dim:#8b94a8;
+  --green:#46c98b;
+  --red:#e0625f;
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Vazirmatn',system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 75% -5%, rgba(58,111,214,0.10), transparent 60%),
+    radial-gradient(900px 500px at 10% 0%, rgba(232,196,90,0.08), transparent 55%),
+    linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
+  color:var(--txt);
+  min-height:100vh;
+  padding:clamp(14px,3vw,34px);
+  line-height:1.7;
+}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 20%, #cde, transparent),
+    radial-gradient(1px 1px at 40% 70%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 60%, #fed, transparent),
+    radial-gradient(1px 1px at 55% 45%, #fff, transparent);
+  background-size:cover;}
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto}
+
+/* ---- Header ---- */
+header{display:flex;align-items:center;gap:18px;margin-bottom:8px;flex-wrap:wrap}
+.logo{
+  width:62px;height:62px;border-radius:16px;flex:none;
+  display:grid;place-items:center;font-weight:900;font-size:34px;
+  color:#cfe0ff;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,210,120,.9), transparent 45%),
+    radial-gradient(circle at 60% 70%, rgba(70,120,230,.85), transparent 50%),
+    linear-gradient(135deg,#0c1326,#1a2742);
+  box-shadow:0 0 30px rgba(232,196,90,.25), inset 0 0 20px rgba(58,111,214,.4);
+  text-shadow:0 0 12px rgba(120,170,255,.8);
+}
+.title h1{
+  font-weight:900;font-size:clamp(20px,3.4vw,33px);letter-spacing:-.5px;
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold-dim));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 2px 18px rgba(232,196,90,.18);
+}
+.title p{color:var(--txt-dim);font-size:clamp(12px,1.6vw,15px);margin-top:2px}
+.coop{margin-right:auto;text-align:left;color:var(--txt-dim);font-size:12px;line-height:1.5}
+.coop b{color:var(--gold);font-size:13px}
+
+/* ---- Layout ---- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;margin-top:18px}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.col-left{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  padding:20px;
+  backdrop-filter:blur(10px);
+  box-shadow:0 18px 40px rgba(0,0,0,.45);
+}
+.panel h2{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.panel h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.panel .sub{color:var(--txt-dim);font-size:12px;margin-bottom:16px}
+
+/* ---- KPI row ---- */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:560px){.kpis{grid-template-columns:1fr}}
+.kpi{
+  background:linear-gradient(160deg,rgba(255,255,255,.03),rgba(0,0,0,.15));
+  border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px;
+}
+.kpi .lbl{color:var(--txt-dim);font-size:12px;margin-bottom:6px}
+.kpi .val{font-size:clamp(18px,2.4vw,26px);font-weight:900;color:var(--txt);letter-spacing:-.5px;direction:ltr;text-align:right}
+.kpi .val .unit{font-size:12px;color:var(--txt-dim);font-weight:400;margin-right:4px}
+.kpi.gold .val{color:var(--gold-bright);text-shadow:0 0 16px rgba(232,196,90,.3)}
+
+/* ---- Gauge ---- */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.gauge{position:relative;width:200px;height:200px}
+.gauge svg{transform:rotate(-90deg)}
+.gauge .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge .pct{font-size:38px;font-weight:900;color:var(--gold-bright);direction:ltr;text-shadow:0 0 18px rgba(232,196,90,.35)}
+.gauge .cap{font-size:12px;color:var(--txt-dim)}
+
+/* ---- Inputs ---- */
+.input-list{display:flex;flex-direction:column;gap:2px;max-height:none}
+.irow{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.04)}
+.irow:last-child{border-bottom:none}
+.irow .nm{flex:1;min-width:0}
+.irow .nm b{font-size:13.5px;color:var(--txt);font-weight:700;display:block}
+.irow .nm span{font-size:11px;color:var(--txt-dim);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irow input{
+  width:128px;flex:none;background:rgba(0,0,0,.35);border:1px solid rgba(232,196,90,.25);
+  border-radius:9px;color:var(--gold-bright);font-family:inherit;font-size:14px;font-weight:700;
+  padding:8px 10px;text-align:left;direction:ltr;outline:none;transition:.15s;
+}
+.irow input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,196,90,.12);background:rgba(0,0,0,.5)}
+.irow input::placeholder{color:var(--txt-dim);font-weight:400}
+.group-head{font-size:13px;font-weight:900;color:var(--gold);margin:14px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--panel-line);display:flex;justify-content:space-between;align-items:center}
+.group-head .gsum{font-size:12px;color:var(--txt);direction:ltr}
+
+/* ---- factor bars ---- */
+.factors{display:flex;flex-direction:column;gap:13px;margin-top:4px}
+.factor .ftop{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
+.factor .ftop .fn{color:var(--txt)}
+.factor .ftop .fp{color:var(--gold-bright);font-weight:700;direction:ltr}
+.bar{height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),var(--gold));transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* ---- final price card ---- */
+.final{
+  text-align:center;
+  background:linear-gradient(160deg,rgba(232,196,90,.12),rgba(58,111,214,.06));
+  border:1px solid rgba(232,196,90,.35);
+}
+.final .lbl{color:var(--txt-dim);font-size:13px}
+.final .big{font-size:clamp(28px,5vw,42px);font-weight:900;color:var(--gold-bright);direction:ltr;text-shadow:0 0 24px rgba(232,196,90,.35);margin:4px 0}
+.final .big .u{font-size:15px;color:var(--txt-dim);font-weight:400}
+.profit-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.profit-row label{font-size:12px;color:var(--txt-dim)}
+.profit-row input{width:70px;background:rgba(0,0,0,.4);border:1px solid rgba(232,196,90,.3);border-radius:8px;color:var(--gold-bright);font-family:inherit;font-weight:700;padding:6px 8px;text-align:center;direction:ltr;outline:none}
+.cost-line{color:var(--txt-dim);font-size:13px;margin-top:10px}
+.cost-line b{color:var(--txt);direction:ltr}
+
+canvas{max-width:100%}
+.legend{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.legend .lg{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--txt-dim)}
+.legend .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.legend .lg .pc{margin-right:auto;color:var(--txt);direction:ltr}
+.donut-flex{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.donut-box{position:relative;width:170px;height:170px;flex:none}
+.donut-box .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-box .ctr .t1{font-size:11px;color:var(--txt-dim)}
+.donut-box .ctr .t2{font-size:17px;font-weight:900;color:var(--gold-bright);direction:ltr}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.btn{font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;border-radius:10px;padding:9px 16px;border:1px solid rgba(232,196,90,.3);background:rgba(232,196,90,.08);color:var(--gold-bright);transition:.15s}
+.btn:hover{background:rgba(232,196,90,.16)}
+.btn.ghost{color:var(--txt-dim);border-color:rgba(255,255,255,.12);background:transparent}
+.note{font-size:11.5px;color:var(--txt-dim);margin-top:14px;line-height:1.7;border-top:1px solid rgba(255,255,255,.06);padding-top:12px}
+footer{text-align:center;color:var(--txt-dim);font-size:11.5px;margin-top:26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
+footer b{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">S</div>
+    <div class="title">
+      <h1>موتور بهای تمام‌شده زنده</h1>
+      <p>هوش حاشیه سود در لحظه</p>
+    </div>
+    <div class="coop">
+      <b>تعاونی کفاشان دست‌دوز تهران</b><br>
+      تأسیس ۱۳۴۸ · محاسبه‌گر قیمت تمام‌شده یک جفت کفش
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: dashboards -->
+    <div class="col-left">
+
+      <!-- KPI strip -->
+      <div class="panel">
+        <h2><span class="dot"></span> نمای کلی هزینه</h2>
+        <div class="sub">همه مبالغ به ازای یک جفت کفش (جفتی) — به تومان</div>
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">مواد مستقیم</div><div class="val" id="kpiMat">۰</div></div>
+          <div class="kpi"><div class="lbl">دستمزد مستقیم</div><div class="val" id="kpiWage">۰</div></div>
+          <div class="kpi gold"><div class="lbl">سایر هزینه‌ها</div><div class="val" id="kpiOther">۰</div></div>
+        </div>
+      </div>
+
+      <!-- Gauge + Donut -->
+      <div class="panel" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div>
+          <h2><span class="dot"></span> حاشیه سود لحظه‌ای</h2>
+          <div class="sub">نسبت سود به قیمت فروش</div>
+          <div class="gauge-wrap">
+            <div class="gauge">
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="84" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="16"/>
+                <circle id="gaugeArc" cx="100" cy="100" r="84" fill="none" stroke="url(#gg)" stroke-width="16"
+                  stroke-linecap="round" stroke-dasharray="527" stroke-dashoffset="527"/>
+                <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#3a6fd6"/><stop offset="100%" stop-color="#ffd97a"/>
+                </linearGradient></defs>
+              </svg>
+              <div class="center"><div class="pct" id="gaugePct">۰٪</div><div class="cap">حاشیه سود</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2><span class="dot"></span> تفکیک بهای تمام‌شده</h2>
+          <div class="sub">سهم هر بخش از هزینه کل</div>
+          <div class="donut-flex">
+            <div class="donut-box">
+              <canvas id="donut" width="170" height="170"></canvas>
+              <div class="ctr"><div class="t1">بهای تمام‌شده</div><div class="t2" id="donutCenter">۰</div></div>
+            </div>
+            <div class="legend" id="donutLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Factors -->
+      <div class="panel">
+        <h2><span class="dot"></span> عوامل بهای تمام‌شده</h2>
+        <div class="sub">سهم درصدی هر گروه هزینه</div>
+        <div class="factors" id="factors"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: inputs + final -->
+    <div class="col-left">
+
+      <div class="panel final">
+        <div class="lbl">قیمت فروش پیشنهادی (هر جفت)</div>
+        <div class="big" id="sellPrice">۰ <span class="u">تومان</span></div>
+        <div class="profit-row">
+          <label>درصد سود کارگاه:</label>
+          <input type="number" id="profitPct" value="40" min="0" step="1"> <span style="color:var(--txt-dim)">٪</span>
+        </div>
+        <div class="cost-line">بهای تمام‌شده: <b id="totalCost">۰</b> تومان</div>
+        <div class="cost-line">سود هر جفت: <b id="profitAmt">۰</b> تومان</div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="dot"></span> ورود اطلاعات هزینه</h2>
+        <div class="sub">مبلغ جفتی هر قلم را وارد کنید</div>
+        <div class="toolbar">
+          <button class="btn" id="demoBtn">پر کردن با نمونه</button>
+          <button class="btn ghost" id="clearBtn">پاک کردن همه</button>
+        </div>
+        <div class="input-list" id="inputs"></div>
+        <div class="note">
+          محاسبه قیمت تمام‌شده یک جفت کفش به تعداد تولید در روز بستگی دارد؛ ردیف «سایر» سالانه است و سهم هر جفت از آن وارد می‌شود.
+          فقط مبلغ دلخواه خودتان را با توجه به تعداد تولید روزانه وارد کنید تا قیمت تمام‌شده به دست آید.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    ساخته‌شده برای <b>تعاونی کفاشان دست‌دوز تهران</b> · ربات بله: <b>@Shoe_cost_bot</b>
+  </footer>
+</div>
+
+<script>
+// ---------- Real cost items from the cooperative Excel ----------
+const GROUPS = [
+  { key:'mat', name:'مواد اولیه', color:'#e8c45a', items:[
+    ['چرم رویه','فلوتر، صافتی، جیر، نبوک، اشوالت'],
+    ['چرم آستری','گاوی، بزی، گوسفندی'],
+    ['زیره','ترمو، لاستیک، نیولایت، چرم، پی‌یو'],
+    ['کفی','تکسون، اشتراول و سایر'],
+    ['قدک پشت و پنجه','قدک حرارتی، تکنوژی، بنزینی'],
+    ['انواع چسب','فرنگی، کرپ، پی‌یو، دوغی'],
+    ['ابر','معمولی، مموری فوم'],
+    ['خرجکار','میخ، منگنه، پرایمر، سمباده، واکس، نخ، سوزن'],
+    ['یراق آلات','سگک، منگنه و سایر'],
+    ['بند',''],
+    ['زیپ',''],
+    ['کلجه','چسبی، آماده'],
+    ['مدل‌سازی و قالب','هزینه‌های تکی'],
+    ['بسته‌بندی','جعبه، کارتن مادر، نایلکس، سلفون'],
+    ['ملزومات','قالب، تیغ، تخته پرس، آلومینیوم'],
+    ['ضایعات','چرم، آستر، زیره'],
+  ]},
+  { key:'wage', name:'دستمزد مستقیم', color:'#3a6fd6', items:[
+    ['آستر بر',''],['لویس کار',''],['رومیزکار',''],['چرخکار',''],
+    ['دورنعلکی',''],['لفاف‌کن',''],['پرداخت‌چی',''],['کار جمع‌کن',''],
+    ['لیزر / بافت',''],['دوخت زیگزاگ',''],['حک مارک',''],['مدل‌گیر',''],
+    ['سرپرست / حسابدار','کنترل کیفی، کارفرما'],
+  ]},
+  { key:'other', name:'سایر هزینه‌ها', color:'#9a7bd6', items:[
+    ['اجاره',''],['تعمیر و نگهداری ماشین‌آلات',''],['انرژی',''],['بیمه',''],
+    ['حمل و نقل و پیک',''],['خدمات پس از فروش',''],['آبدارخانه',''],['مالیات عملکرد',''],
+  ]},
+];
+
+const DEMO = {
+  mat:[78000,22000,95000,18000,12000,9000,7000,15000,6000,4000,3000,8000,11000,14000,9000,5000],
+  wage:[8000,9000,7000,12000,6000,5000,8000,6000,4000,5000,3000,4000,9000],
+  other:[14000,4000,9000,6000,7000,3000,2000,6000],
+};
+
+// Persian digit helpers
+const faDigit = s => String(s).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+const fmt = n => faDigit(Math.round(n).toLocaleString('en-US'));
+const enNum = s => Number(String(s).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^0-9.]/g,''))||0;
+
+// Build inputs
+const inputsEl = document.getElementById('inputs');
+const fieldRefs = {};
+GROUPS.forEach(g=>{
+  fieldRefs[g.key]=[];
+  const head=document.createElement('div');
+  head.className='group-head';
+  head.innerHTML=`<span>${g.name}</span><span class="gsum" id="sum_${g.key}">۰</span>`;
+  inputsEl.appendChild(head);
+  g.items.forEach((it,i)=>{
+    const row=document.createElement('div'); row.className='irow';
+    row.innerHTML=`<div class="nm"><b>${it[0]}</b>${it[1]?`<span>${it[1]}</span>`:''}</div>`;
+    const inp=document.createElement('input');
+    inp.type='text'; inp.inputMode='numeric'; inp.placeholder='۰';
+    inp.addEventListener('input',recalc);
+    row.appendChild(inp); inputsEl.appendChild(row);
+    fieldRefs[g.key].push(inp);
+  });
+});
+
+// Donut
+const dctx=document.getElementById('donut').getContext('2d');
+function drawDonut(parts){
+  const W=170,cx=85,cy=85,rO=72,rI=46;
+  dctx.clearRect(0,0,W,W);
+  const total=parts.reduce((a,b)=>a+b.v,0)||1;
+  let ang=-Math.PI/2;
+  parts.forEach(p=>{
+    const slice=(p.v/total)*Math.PI*2;
+    dctx.beginPath();
+    dctx.arc(cx,cy,rO,ang,ang+slice);
+    dctx.arc(cx,cy,rI,ang+slice,ang,true);
+    dctx.closePath(); dctx.fillStyle=p.c; dctx.fill();
+    ang+=slice;
+  });
+}
+
+function setGauge(pct){
+  const arc=document.getElementById('gaugeArc');
+  const C=527; const v=Math.max(0,Math.min(100,pct));
+  arc.style.strokeDashoffset=C-(C*v/100);
+  document.getElementById('gaugePct').textContent=faDigit(v.toFixed(1))+'٪';
+}
+
+function recalc(){
+  const sums={};
+  GROUPS.forEach(g=>{
+    let s=0; fieldRefs[g.key].forEach(inp=>s+=enNum(inp.value));
+    sums[g.key]=s;
+    document.getElementById('sum_'+g.key).textContent=fmt(s);
+  });
+  const mat=sums.mat, wage=sums.wage, other=sums.other;
+  const totalCost=mat+wage+other;
+  const profitPct=enNum(document.getElementById('profitPct').value);
+  const profitAmt=totalCost*profitPct/100;
+  const sell=totalCost+profitAmt;
+  const margin= sell>0 ? (profitAmt/sell*100) : 0;
+
+  document.getElementById('kpiMat').innerHTML=fmt(mat)+' <span class="unit">ت</span>';
+  document.getElementById('kpiWage').innerHTML=fmt(wage)+' <span class="unit">ت</span>';
+  document.getElementById('kpiOther').innerHTML=fmt(other)+' <span class="unit">ت</span>';
+  document.getElementById('totalCost').textContent=fmt(totalCost);
+  document.getElementById('profitAmt').textContent=fmt(profitAmt);
+  document.getElementById('sellPrice').innerHTML=fmt(sell)+' <span class="u">تومان</span>';
+
+  setGauge(margin);
+
+  const parts=[
+    {n:'مواد اولیه',v:mat,c:'#e8c45a'},
+    {n:'دستمزد مستقیم',v:wage,c:'#3a6fd6'},
+    {n:'سایر هزینه‌ها',v:other,c:'#9a7bd6'},
+  ];
+  drawDonut(parts);
+  document.getElementById('donutCenter').textContent=fmt(totalCost);
+  const tot=totalCost||1;
+  document.getElementById('donutLegend').innerHTML=parts.map(p=>
+    `<div class="lg"><span class="sw" style="background:${p.c}"></span>${p.n}<span class="pc">${faDigit((p.v/tot*100).toFixed(0))}٪</span></div>`
+  ).join('');
+
+  // factor bars: each material-ish bucket vs total
+  const factors=[
+    {n:'مواد اولیه',v:mat},
+    {n:'دستمزد',v:wage},
+    {n:'سربار و سایر',v:other},
+  ];
+  document.getElementById('factors').innerHTML=factors.map(f=>{
+    const pc=f.v/tot*100;
+    return `<div class="factor"><div class="ftop"><span class="fn">${f.n}</span><span class="fp">${faDigit(pc.toFixed(0))}٪</span></div><div class="bar"><i style="width:${pc}%"></i></div></div>`;
+  }).join('');
+}
+
+document.getElementById('profitPct').addEventListener('input',recalc);
+document.getElementById('demoBtn').addEventListener('click',()=>{
+  GROUPS.forEach(g=>fieldRefs[g.key].forEach((inp,i)=>inp.value=faDigit((DEMO[g.key][i]||0))));
+  recalc();
+});
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  GROUPS.forEach(g=>fieldRefs[g.key].forEach(inp=>inp.value=''));
+  recalc();
+});
+recalc();
+</script>
+</body>
+</html>
